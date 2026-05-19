@@ -994,7 +994,7 @@
     ['intubation', 'intubate', 'ett', 'endotracheal tube', 'tube size'],
     ['mabl', 'maximum allowable blood loss', 'blood loss', 'transfusion threshold', 'allowable loss'],
     ['fluid', 'fluids', 'maintenance', 'bolus', 'crystalloid', 'lactated ringers', 'normal saline', 'lr', 'ns', 'plasmalyte'],
-    ['blood', 'prbc', 'transfusion', 'packed red cells', 'red blood cells'],
+    ['blood', 'prbc', 'transfusion', 'packed red cells', 'red blood cells', 'hemorrhage', 'haemorrhage', 'bleeding', 'massive transfusion', 'mtp', 'mass transfusion', 'exsanguination', 'txa', 'tranexamic acid'],
     ['glucose', 'sugar', 'hypoglycemia', 'd10', 'd25', 'd50', 'dextrose'],
     ['hypoglycemia', 'low sugar', 'low glucose'],
     ['reversal', 'reverse', 'sugammadex', 'neostigmine', 'glycopyrrolate', 'narcan', 'naloxone', 'flumazenil'],
@@ -1112,6 +1112,8 @@
     ['emergence', 'emergence delirium', 'emergence agitation', 'precedex'],
     // Specific peds scenarios
     ['routine ga', 'general anesthesia', 'ga setup', 'standard induction'],
+    ['room setup', 'pre-case', 'precase', 'set up', 'setup', 'equipment check'],
+    ['iv setup', 'iv tubing', 'drip set', 'drip', 'burette', 'buretrol', 'microdrip', 'macrodrip', 'gtt', 'tubing', 'iv line'],
     ['ent', 'ear nose throat', 'tonsils', 't&a', 'tonsillectomy', 'adenoidectomy'],
     ['eye', 'ophtho', 'ophthalmology', 'strabismus'],
     ['ndmr', 'non-depolarizing', 'rocuronium', 'vecuronium', 'cisatracurium', 'atracurium'],
@@ -1413,10 +1415,10 @@
       ]);
       return;
     }
-    // Patient is set — show scenarios + categories + favorites
+    // Patient is set — show home with sections in order of frequency-of-use
     title('Home');
 
-    // Favorites first (if any)
+    // Favorites first (if any) — user-customized pins
     if (favorites.length > 0) {
       sectionHead('Favorites');
       const opts = favorites.map(k => {
@@ -1427,21 +1429,18 @@
       if (opts.length) optGrid(opts);
     }
 
-    sectionHead('Scenarios & bundles');
+    // 1 — ROUTINE: stuff you reach for in every case, in order: room setup → GA → induction variants → MABL
+    sectionHead('Routine — scenarios & bundles');
     optGrid([
-      { title: 'Routine GA setup', sub: 'Standard induction, maintenance, emergence meds', onClick: () => go('Routine GA setup', 'b-routineGA', renderBundleRoutineGA) },
+      { title: 'Room setup', sub: 'Pre-case: circuit, mask, OPA, LMA, ETT, blade, BP cuff, vent', onClick: () => go('Room setup', 'b-room', renderRoomSetup) },
+      { title: 'Routine GA', sub: 'Premed → induction → paralytic → maintenance → reversal → PONV → analgesia', onClick: () => go('Routine GA', 'b-routineGA', renderBundleRoutineGA) },
       { title: 'Mask induction', sub: 'Inhalational, then IV access', onClick: () => go('Mask induction', 'b-mask', renderBundleMask) },
       { title: 'RSI', sub: 'Rapid sequence — preox, hypnotic + paralytic', onClick: () => go('RSI', 'b-rsi', renderBundleRSI) },
-      { title: 'Code blue / PALS', sub: 'Cardiac arrest doses', urgent: true, onClick: () => go('Code blue / PALS', 'em-pals', renderPALS) },
-      { title: 'Anaphylaxis', sub: 'Epi IM/IV, fluids, adjuncts', urgent: true, onClick: () => go('Anaphylaxis', 'em-anaphylaxis', renderAnaphylaxis) },
-      { title: 'Laryngospasm', sub: 'CPAP, deepen, succ IV/IM', urgent: true, onClick: () => go('Laryngospasm', 'em-laryngospasm', renderLaryngospasm) },
-      { title: 'Malignant hyperthermia', sub: 'Dantrolene/Ryanodex, cool, treat hyperK', urgent: true, onClick: () => go('Malignant hyperthermia', 'em-mh', renderMH) },
-      { title: 'LAST (lipid rescue)', sub: 'Local anesthetic systemic toxicity', urgent: true, onClick: () => go('LAST', 'em-last', renderLAST) },
-      { title: 'Hyperkalemia', sub: 'Ca, insulin/dextrose, bicarb, β-2', urgent: true, onClick: () => go('Hyperkalemia', 'em-hyperk', renderHyperK) },
-      { title: 'Status epilepticus', sub: 'Benzos → loading → infusion', urgent: true, onClick: () => go('Status epilepticus', 'em-status', renderStatus) },
+      { title: 'MABL', sub: 'Maximum allowable blood loss — set transfusion threshold', onClick: () => go('MABL', 'eq-mabl', renderMABL) },
     ]);
 
-    sectionHead('Drug categories');
+    // 2 — DRUG CLASSES
+    sectionHead('Drug classes');
     optGrid([
       { title: 'Pre-op / premedication', sub: 'Midaz, dexmedetomidine, Tylenol', onClick: () => go('Pre-op', 'cat-preop', renderPreop) },
       { title: 'Induction', sub: 'Propofol, ketamine, etomidate', onClick: () => go('Induction', 'cat-induction', renderInduction) },
@@ -1450,24 +1449,39 @@
       { title: 'Opioids', sub: 'Fentanyl, morphine, hydromorphone, remifentanil', onClick: () => go('Opioids', 'cat-opioids', renderOpioids) },
       { title: 'Analgesics — non-opioid', sub: 'Tylenol, toradol, ibuprofen, dexmed', onClick: () => go('Non-opioid analgesics', 'cat-analgesics', renderAnalgesics) },
       { title: 'Antiemetics', sub: 'Zofran, dex, droperidol, reglan', onClick: () => go('Antiemetics', 'cat-antiemetics', renderAntiemetics) },
-      { title: 'Emergency drugs', sub: 'Atropine, epi, Ca, bicarb, dextrose', urgent: true, onClick: () => go('Emergency drugs', 'cat-emergency', renderEmergency) },
       { title: 'Hemodynamic meds', sub: 'Ephedrine, phenyl, labetalol, esmolol, lasix', onClick: () => go('Hemodynamic meds', 'cat-hemodynamic', renderHemodynamic) },
       { title: 'Vasoactive infusions', sub: 'Epi, norepi, dopamine, milrinone (rule of 6s)', onClick: () => go('Vasoactive infusions', 'cat-vasoactive', renderVasoactive) },
       { title: 'Antibiotics', sub: 'Cefazolin, vanco, clinda, gent, ceftriaxone', onClick: () => go('Antibiotics', 'cat-abx', renderAbx) },
       { title: 'Local anesthetics', sub: 'Max doses, caudal volumes (Armitage)', onClick: () => go('Local anesthetics', 'cat-la', renderLA) },
+      { title: 'Emergency drugs (drawer)', sub: 'All-in-one: atropine, epi, Ca, bicarb, dextrose, dantrolene', urgent: true, onClick: () => go('Emergency drugs', 'cat-emergency', renderEmergency) },
     ]);
 
+    // 3 — EQUIPMENT (intraop random-access)
     sectionHead('Equipment & vent');
     optGrid([
       { title: 'ETT (oral & nasal)', sub: 'Size, depth at teeth/nose', onClick: () => go('ETT', 'eq-ett', renderETT) },
       { title: 'Airway adjuncts', sub: 'OPA, mask, LMA, blade, reservoir bag', onClick: () => go('Airway adjuncts', 'eq-airway', renderAirway) },
       { title: 'BP cuff', sub: 'Size by limb circumference', onClick: () => go('BP cuff', 'eq-bpcuff', renderBPCuff) },
-      { title: 'Ventilation', sub: 'Tidal volumes', onClick: () => go('Ventilation', 'eq-vent', renderVent) },
+      { title: 'Ventilation', sub: 'Tidal volumes, RR by age', onClick: () => go('Ventilation', 'eq-vent', renderVent) },
+      { title: 'IV setup', sub: 'Tubing strategy: burette / microdrip / macrodrip', onClick: () => go('IV setup', 'eq-ivsetup', renderIVSetup) },
       { title: 'Fluids & blood', sub: 'Maintenance, surgical, EBV, transfusion', onClick: () => go('Fluids & blood', 'eq-fluids', renderFluids) },
-      { title: 'MABL', sub: 'Maximum allowable blood loss', onClick: () => go('MABL', 'eq-mabl', renderMABL) },
-      { title: 'Defibrillation / cardioversion', sub: 'J/kg', onClick: () => go('Defibrillation', 'eq-defib', renderDefib) },
+      { title: 'Defibrillation / cardioversion', sub: 'J/kg standalone reference', onClick: () => go('Defibrillation', 'eq-defib', renderDefib) },
     ]);
 
+    // 4 — EMERGENT (all urgent scenarios in one place)
+    sectionHead('Emergent situations');
+    optGrid([
+      { title: 'Code blue / PALS', sub: 'Cardiac arrest — drugs + defib J/kg + cardioversion', urgent: true, onClick: () => go('Code blue / PALS', 'em-pals', renderPALS) },
+      { title: 'Anaphylaxis', sub: 'Epi IM/IV, fluids, adjuncts', urgent: true, onClick: () => go('Anaphylaxis', 'em-anaphylaxis', renderAnaphylaxis) },
+      { title: 'Hemorrhage / MTP', sub: 'Massive transfusion, balanced ratios, Ca, TXA', urgent: true, onClick: () => go('Hemorrhage', 'em-hemorrhage', renderHemorrhage) },
+      { title: 'Laryngospasm', sub: 'CPAP, deepen, succ IV/IM', urgent: true, onClick: () => go('Laryngospasm', 'em-laryngospasm', renderLaryngospasm) },
+      { title: 'Malignant hyperthermia', sub: 'Dantrolene/Ryanodex, cool, treat hyperK', urgent: true, onClick: () => go('Malignant hyperthermia', 'em-mh', renderMH) },
+      { title: 'LAST (lipid rescue)', sub: 'Local anesthetic systemic toxicity', urgent: true, onClick: () => go('LAST', 'em-last', renderLAST) },
+      { title: 'Hyperkalemia', sub: 'Ca, insulin/dextrose, bicarb, β-2', urgent: true, onClick: () => go('Hyperkalemia', 'em-hyperk', renderHyperK) },
+      { title: 'Status epilepticus', sub: 'Benzos → loading → infusion', urgent: true, onClick: () => go('Status epilepticus', 'em-status', renderStatus) },
+    ]);
+
+    // 5 — REFERENCE (look up once, then move on)
     sectionHead('Reference');
     optGrid([
       { title: 'Normal vitals by age', sub: 'HR, BP, RR — Coté', onClick: () => go('Normal vitals', 'ref-vitals', renderVitals) },
@@ -2386,7 +2400,10 @@
     drug({ name: 'Dexamethasone', dose: '0.15 mg/kg IV', sub: 'After induction', perKg: 0.15, cap: 8, conc: 'dexamethasone' });
 
     sectionHead('6 — Reversal (end of case)');
-    drug({ name: 'Sugammadex', dose: '2 mg/kg IV', sub: 'Routine reversal', perKg: 2, conc: 'sugammadex' });
+    drug({ name: 'Sugammadex', dose: '2 mg/kg IV', sub: 'Routine reversal (TOF ≥2)', perKg: 2, conc: 'sugammadex' });
+    drug({ name: 'Sugammadex', dose: '4 mg/kg IV', sub: 'Deep block (PTC 1–2)', perKg: 4, conc: 'sugammadex' });
+    drug({ name: 'Neostigmine', dose: '0.06 mg/kg IV', sub: 'Alternative — needs TOF ≥2 twitches', perKg: 0.06, cap: 5, conc: 'neostigmine' });
+    drug({ name: 'Glycopyrrolate', dose: '0.01 mg/kg IV', sub: 'With neostigmine — blocks muscarinic', perKg: 0.01, conc: 'glycopyrrolate' });
 
     sectionHead('7 — Postop analgesia');
     drug({ name: 'Fentanyl', dose: '1–2 mcg/kg IV', sub: 'PRN — peri-emergence', perKgLow: 1, perKgHigh: 2, unit: 'mcg', conc: 'fentanyl' });
@@ -2445,6 +2462,329 @@
   }
   registerStep('b-rsi', 'RSI', renderBundleRSI, ['Home', 'Bundles']);
 
+  // ============ IV TUBING / DRIP STRATEGY ============
+  // Combined age + weight + rate heuristic for choosing drip set / burette.
+  // Returns { primary, alt, reason } where primary is the recommended strategy.
+  function ivTubingPlan() {
+    const w = calcWeight();
+    const m = ageMonths();
+    // Compute maintenance rate (4-2-1) — same as Fluids page
+    let maint = null;
+    if (w != null) {
+      if (w <= 10) maint = w * 4;
+      else if (w <= 20) maint = 40 + (w - 10) * 2;
+      else maint = w + 40;
+    }
+    if (w == null) return { primary: null, alt: null, reason: 'Enter weight to get a recommendation', maint: null };
+    // Burette + microdrip: infants OR <10 kg OR any setting where free-flow is dangerous
+    if ((m != null && m < 12) || w < 10) {
+      return {
+        primary: 'Burette (Buretrol) + microdrip 60 gtt/mL',
+        alt: 'Pump always if available',
+        reason: (m != null && m < 12) ? 'Infant (<12 mo)' : '<10 kg',
+        maint: maint
+      };
+    }
+    // Macrodrip OK at ~10 yr AND ~40 kg (functionally adult sizing).
+    // Note: peds maintenance rate rarely exceeds 100 mL/hr by 4-2-1, but intraop rates
+    // (surgical replacement + maintenance) often do — so use age+weight as the trigger
+    // and let the user choose macrodrip if expected total rate is high.
+    const yr = m == null ? null : m / 12;
+    if ((yr == null || yr >= 10) && w >= 40) {
+      return {
+        primary: 'Macrodrip 10–15 gtt/mL',
+        alt: 'Microdrip OK if rate <100 mL/hr expected',
+        reason: '≥10 yr · ≥40 kg (functionally adult)',
+        maint: maint
+      };
+    }
+    // Default: microdrip alone for everyone else
+    return {
+      primary: 'Microdrip 60 gtt/mL',
+      alt: 'Add burette if free-flow harm concern (eg. cardiac, neuro)',
+      reason: 'Child not yet large/fast enough for macrodrip',
+      maint: maint
+    };
+  }
+
+  // Render the IV tubing recommendation as a drug-row-style block.
+  // Used in both Room Setup and the standalone IV setup page.
+  function renderIVTubingBlock(opts) {
+    opts = opts || {};
+    const plan = ivTubingPlan();
+    if (plan.primary == null) {
+      const r = el('div', 'drug');
+      const left = el('div', 'd-left');
+      left.appendChild(el('div', 'd-name', 'IV tubing'));
+      left.appendChild(el('div', 'd-sub', plan.reason));
+      r.appendChild(left);
+      stage.appendChild(r);
+      return;
+    }
+    const r = el('div', 'drug');
+    const left = el('div', 'd-left');
+    left.appendChild(el('div', 'd-name', 'IV tubing'));
+    left.appendChild(el('div', 'd-sub', plan.reason + ' · maintenance ' + Math.round(plan.maint) + ' mL/hr'));
+    const right = el('div', 'd-right');
+    right.innerHTML = '<div class="d-mg" style="font-size:14px;line-height:1.3">' + plan.primary + '</div>' +
+                      '<div class="d-ml" style="margin-top:4px">' + plan.alt + '</div>';
+    r.appendChild(left); r.appendChild(right);
+    stage.appendChild(r);
+  }
+
+  // ============ ROOM SETUP (combined equipment view) ============
+
+  function renderRoomSetup() {
+    titleWithFav('Room setup', 'Pre-case checklist. Walk the room — pull these sizes and have them at hand before the patient rolls in.', 'b-room');
+    const w = calcWeight();
+    const m = ageMonths();
+
+    // Helper to render an inline row with label + value
+    function row(label, val, sub) {
+      const r = el('div', 'drug');
+      const left = el('div', 'd-left');
+      left.appendChild(el('div', 'd-name', label));
+      if (sub) left.appendChild(el('div', 'd-sub', sub));
+      const right = el('div', 'd-right');
+      right.innerHTML = '<div class="d-mg" style="font-size:15px">' + (val || '—') + '</div>';
+      r.appendChild(left); r.appendChild(right);
+      stage.appendChild(r);
+    }
+
+    sectionHead('Anesthesia circuit');
+    let circuit = null;
+    if (w != null) {
+      if (w < 10) circuit = 'Pediatric circuit (low compliance)';
+      else if (w < 25) circuit = 'Pediatric circuit';
+      else circuit = 'Adult circuit';
+    }
+    row('Circuit', circuit, w == null ? 'Need weight' : 'For ' + roundMg(w) + ' kg');
+
+    let bagSize = null;
+    if (w != null) {
+      if (w < 7) bagSize = '0.5 L';
+      else if (w < 25) bagSize = '1 L';
+      else bagSize = '2 L';
+    }
+    row('Reservoir bag', bagSize);
+
+    sectionHead('Mask & airway adjuncts');
+    let maskSize = null;
+    if (w != null) {
+      if (w < 5) maskSize = 'Size 0 — neonate';
+      else if (w < 10) maskSize = 'Size 1 — small infant';
+      else if (w < 20) maskSize = 'Size 2 — orange';
+      else if (w < 40) maskSize = 'Size 3 — purple';
+      else if (w < 60) maskSize = 'Size 4 — green';
+      else maskSize = 'Size 5 — adult';
+    }
+    row('Face mask', maskSize);
+
+    let opaSize = null;
+    if (m != null) {
+      if (m < 1) opaSize = '40 mm (clear) — neonatal';
+      else if (m < 6) opaSize = '50 mm (blue) — Rusch 0';
+      else if (m < 24) opaSize = '60 mm (black) — Guedel';
+      else if (m < 72) opaSize = '70 mm (white)';
+      else if (m < 144) opaSize = '80 mm (green)';
+      else if (m < 192) opaSize = '90 mm (yellow)';
+      else opaSize = '100 mm (red) — adult';
+    }
+    row('Oral airway (OPA)', opaSize, m == null ? 'Need age' : null);
+
+    let lmaSize = null;
+    if (w != null) {
+      if (w < 5) lmaSize = '1 (≤4 mL cuff)';
+      else if (w < 10) lmaSize = '1.5 (≤7 mL)';
+      else if (w < 20) lmaSize = '2 (≤10 mL)';
+      else if (w < 30) lmaSize = '2.5 (≤14 mL)';
+      else if (w < 50) lmaSize = '3 (≤20 mL)';
+      else if (w < 70) lmaSize = '4 (≤30 mL)';
+      else lmaSize = '5 (≤40 mL)';
+    }
+    row('LMA', lmaSize);
+
+    sectionHead('ETT & laryngoscope');
+    let oCuf=null, oUn=null, nCuf=null, nUn=null;
+    if (m != null) {
+      if (m < 12) { oCuf=3.0; oUn=3.5; nCuf=2.5; nUn=3.5; }
+      else if (m < 24) { oCuf=3.5; oUn=4.0; nCuf=3.0; nUn=4.0; }
+      else {
+        const y = m / 12;
+        oCuf = Math.round((y/4 + 3.5)*2)/2;
+        oUn = Math.round((y/4 + 4)*2)/2;
+        nCuf = Math.round((y/4 + 3)*2)/2;
+        nUn = Math.round((y/4 + 4)*2)/2;
+      }
+    }
+    row('Oral ETT', oCuf == null ? null : oCuf + ' cuf / ' + oUn + ' uncuf (mm)', m == null ? 'Need age' : null);
+    row('Nasal ETT', nCuf == null ? null : nCuf + ' cuf / ' + nUn + ' uncuf (mm)', m == null ? 'Need age' : null);
+
+    let depthOral = null, depthNose = null;
+    if (m != null && w != null) {
+      if (m < 12) { depthOral = (w+6) + '–' + (w+7); depthNose = w+8; }
+      else if (m < 24) { depthOral = (w+7) + '–' + (w+8); depthNose = w+9; }
+      else {
+        const y = m/12;
+        depthOral = (10+y/2) + '–' + (12+y/2);
+        depthNose = 15 + y/2;
+      }
+    }
+    row('ET depth at teeth', depthOral == null ? null : depthOral + ' cm');
+    row('ET depth at nose', depthNose == null ? null : (Math.round(depthNose*10)/10) + ' cm');
+
+    let blade = null;
+    if (m != null && w != null) {
+      if (m < 1) blade = 'Miller 0';
+      else if (m < 24) blade = 'Miller 1';
+      else if (m < 36) blade = 'Wis-Hipple 1.5 or Miller 1';
+      else if (m < 72) blade = 'Mac 2 or Miller 2';
+      else blade = w < 25 ? 'Philips 1 or Mac 2' : 'Philips 2 or Mac 3';
+    }
+    row('Laryngoscope blade', blade);
+
+    sectionHead('Monitoring');
+    let cuff = null;
+    if (w != null) {
+      if (w < 5) cuff = 'Philips size 1';
+      else if (w < 10) cuff = 'Philips size 2';
+      else if (w < 15) cuff = 'Philips size 3';
+      else if (w < 25) cuff = 'WA size 6';
+      else if (w < 35) cuff = 'WA size 7';
+      else if (w < 45) cuff = 'WA size 8 — or 10 if loose';
+      else cuff = 'WA size 10';
+    }
+    row('BP cuff', cuff, w == null ? 'Need weight' : 'Upper arm');
+
+    sectionHead('Ventilator starting points');
+    row('Tidal volume', w == null ? null : Math.round(w*6) + '–' + Math.round(w*10) + ' mL', '6–10 mL/kg');
+    let rrStart = null;
+    if (m != null) {
+      if (m < 1) rrStart = '30–40';
+      else if (m < 12) rrStart = '24–30';
+      else if (m < 36) rrStart = '20–24';
+      else if (m < 144) rrStart = '16–20';
+      else rrStart = '12–16';
+    }
+    row('Starting RR', rrStart);
+    row('PEEP', '5 cm H₂O', 'Default; adjust for pathology');
+
+    sectionHead('Fluids');
+    let maint = null;
+    if (w != null) {
+      if (w <= 10) maint = w * 4;
+      else if (w <= 20) maint = 40 + (w - 10) * 2;
+      else maint = w + 40;
+    }
+    row('Maintenance fluid', maint == null ? null : Math.round(maint) + ' mL/hr', '4-2-1 rule');
+    row('20 mL/kg bolus pre-drawn', w == null ? null : Math.round(w*20) + ' mL');
+    renderIVTubingBlock();
+    note('<strong>Tubing heuristic:</strong> burette + microdrip for infants and anyone where free-flow could harm; microdrip alone when rate <100 mL/hr; macrodrip acceptable once large enough and rate high enough to make drop-counting impractical (~10 yr / ~40 kg / >100 mL/hr). <em>Check your local P&P — published standards are the floor.</em>', 'info');
+
+    note('<strong>Tip:</strong> If you only have age, weight is APLS-estimated — equipment sizes are best guesses. Real weight when possible.', 'info');
+  }
+  registerStep('b-room', 'Room setup', renderRoomSetup, ['Home', 'Routine']);
+
+  // ============ HEMORRHAGE / MASSIVE TRANSFUSION ============
+
+  function renderHemorrhage() {
+    titleWithFav('Hemorrhage / massive transfusion', 'Massive transfusion in peds: >40 mL/kg PRBC in 24h OR >50% of EBV in 3h. Recognize early, transfuse balanced, replace calcium.', 'em-hemorrhage');
+    note('<strong>Sequence:</strong> recognize → call for blood → large-bore access → balanced resuscitation (1:1:1 plasma:plt:RBC) → replace calcium → TXA early → warm everything → monitor labs (Hgb, ionized Ca, K+, lactate, fibrinogen).', 'danger');
+
+    const w = calcWeight();
+    const m = ageMonths();
+
+    // EBV
+    let ebvPerKg = 70;
+    if (m != null) {
+      if (m < 1) ebvPerKg = 85;
+      else if (m < 12) ebvPerKg = 80;
+      else if (m < 24) ebvPerKg = 75;
+      else if (m < 72) ebvPerKg = 70;
+      else ebvPerKg = 65;
+    }
+    const ebv = w == null ? null : w * ebvPerKg;
+
+    sectionHead('Estimated blood volume (EBV)');
+    drug({ name: 'EBV', dose: ebvPerKg + ' mL/kg', sub: 'Massive transfusion threshold: 50% EBV in 3 h, or >40 mL/kg PRBC in 24 h',
+      custom: ebv == null ? '—' : Math.round(ebv) + ' mL (50% = ' + Math.round(ebv/2) + ' mL)' });
+
+    sectionHead('Components (per dose)');
+    drug({ name: 'Packed RBC', dose: '10–15 mL/kg', sub: '↑ Hgb 2–3 g/dL', custom: w == null ? '—' : Math.round(w*10) + '–' + Math.round(w*15) + ' mL' });
+    drug({ name: 'FFP', dose: '10–15 mL/kg', sub: '↑ factors 15–20%; goal INR <1.5', custom: w == null ? '—' : Math.round(w*10) + '–' + Math.round(w*15) + ' mL' });
+    drug({ name: 'Platelets', dose: '5–10 mL/kg', sub: '↑ plt 50–100k; goal >50k (or >100k if intracranial/spinal)', custom: w == null ? '—' : Math.round(w*5) + '–' + Math.round(w*10) + ' mL' });
+    drug({ name: 'Cryoprecipitate', dose: '1–2 units/kg', sub: '↑ fibrinogen 60–100 mg/dL; goal >150–200', custom: w == null ? '—' : Math.round(w*1) + '–' + Math.round(w*2) + ' units' });
+
+    sectionHead('Balanced ratio (MTP)');
+    note('<strong>1:1:1 PRBC : FFP : plt</strong> in volumes. Practical peds: every 10–15 mL/kg PRBC, give 10–15 mL/kg FFP + 5–10 mL/kg plt. Activate institutional Massive Transfusion Protocol (MTP) early — don\'t wait for it to be definitely needed.', 'info');
+
+    sectionHead('Adjuncts');
+    drug({ name: 'TXA — load', dose: '10–15 mg/kg IV', sub: 'Over 10 min; within 3 h of injury (CRASH-2, CRASH-3)', perKgLow: 10, perKgHigh: 15, cap: 1000,
+      src: 'Pediatric trauma data extrapolated from adult CRASH trials. Earlier = better. Continue infusion 2 mg/kg/hr × 8 h if indicated.' });
+    drug({ name: 'TXA — infusion', dose: '2 mg/kg/hr × 8 h', sub: 'After loading dose', custom: w == null ? '—' : (Math.round(w*2*10)/10) + ' mg/hr × 8h' });
+    drug({ name: 'Calcium chloride', dose: '10–20 mg/kg IV', sub: 'Every 4–5 units PRBC, or per ionized Ca++', perKgLow: 10, perKgHigh: 20, cap: 1000, conc: 'CaCl',
+      src: 'Citrate binds Ca++ → ionized hypocalcemia → ↓ contractility, hypoTN, coagulopathy. Check iCa++ q30 min.' });
+    drug({ name: 'Calcium gluconate', dose: '30–60 mg/kg IV', sub: 'Peripheral OK', perKgLow: 30, perKgHigh: 60, cap: 3000, conc: 'CaGluc' });
+    drug({ name: 'Bicarbonate', dose: '1–2 mEq/kg IV', sub: 'Only if pH <7.2 with adequate ventilation', perKgLow: 1, perKgHigh: 2, cap: 50, unit: 'mEq' });
+
+    sectionHead('Targets (lab goals)');
+    const tbl = el('table', 'ref');
+    const thead = el('thead'); const hr = el('tr');
+    ['Parameter', 'Target', 'Action if abnormal'].forEach(h => { const th = el('th'); th.textContent = h; hr.appendChild(th); });
+    thead.appendChild(hr); tbl.appendChild(thead);
+    const tbody = el('tbody');
+    [
+      ['Hgb', '7–8 g/dL minimum', 'PRBC 10–15 mL/kg'],
+      ['INR', '<1.5', 'FFP 10–15 mL/kg'],
+      ['Platelets', '>50k (>100k if CNS/spine)', 'Plt 5–10 mL/kg'],
+      ['Fibrinogen', '>150–200 mg/dL', 'Cryo 1–2 units/kg'],
+      ['Ionized Ca++', '>1.1 mmol/L', 'CaCl 10–20 mg/kg (central) or CaGluc 30–60 mg/kg'],
+      ['K+', '<5.5 mEq/L', 'Treat hyperK (Ca, insulin/D, albuterol)'],
+      ['pH', '>7.2', 'Improve ventilation + perfusion; bicarb if severe'],
+      ['Temperature', '>36 °C', 'Warmer, forced air, warmed fluids'],
+      ['Lactate', '<2 mmol/L', 'Trend — marker of perfusion'],
+    ].forEach(r => { const tr = el('tr'); r.forEach(c => { const td = el('td'); td.textContent = c; tr.appendChild(td); }); tbody.appendChild(tr); });
+    tbl.appendChild(tbody); stage.appendChild(tbl);
+
+    sectionHead('Pitfalls');
+    note('<strong>Hyperkalemia from old PRBC</strong> — units >2 weeks old leak K+; in massive transfusion or fast infusion, ECG changes can occur. Use fresh blood when available, especially in neonates. <strong>Hypothermia, acidosis, hypoCa</strong> form the "lethal trinity + 1" of trauma coagulopathy. Warm everything. <strong>Don\'t forget the cause</strong> — surgical bleeding needs surgical control; medical bleeding (DIC, dilutional) needs components.', 'warn');
+  }
+  registerStep('em-hemorrhage', 'Hemorrhage / massive transfusion', renderHemorrhage, ['Home', 'Emergent']);
+
+  // ============ IV SETUP (standalone equipment page) ============
+
+  function renderIVSetup() {
+    titleWithFav('IV setup — tubing & drip strategy', 'Patient-specific tubing recommendation, with the heuristic and caveat underneath.', 'eq-ivsetup');
+
+    sectionHead('Recommended for this patient');
+    renderIVTubingBlock();
+
+    sectionHead('The heuristic');
+    note('<strong>Burette (Buretrol) + microdrip 60 gtt/mL</strong> — infants (<12 mo) and any patient where free-flow could cause harm. Limits the volume that can run in if the pump fails or the line opens up. Default for cardiac, neuro, neonatal, and <10 kg.<br><br><strong>Microdrip 60 gtt/mL alone</strong> — children running maintenance <100 mL/hr. Lets you count drops, hard to over-deliver inadvertently.<br><br><strong>Macrodrip 10–15 gtt/mL</strong> — large enough patient and high enough rate that drop-counting is impractical. Rough proxies: ~10 years or ~40 kg, rates >100 mL/hr. Or anytime you need high-flow access (resuscitation, hemorrhage).', 'info');
+
+    sectionHead('Combined triggers');
+    const tbl = el('table', 'ref');
+    const thead = el('thead'); const hr = el('tr');
+    ['Trigger', 'Threshold', 'Choice'].forEach(h => { const th = el('th'); th.textContent = h; hr.appendChild(th); });
+    thead.appendChild(hr); tbl.appendChild(thead);
+    const tbody = el('tbody');
+    [
+      ['Age', '<12 mo', 'Burette + microdrip'],
+      ['Weight', '<10 kg', 'Burette + microdrip'],
+      ['Free-flow harm risk', 'Cardiac, neuro, neonatal', 'Burette + microdrip'],
+      ['Maintenance rate', '<100 mL/hr', 'Microdrip alone OK'],
+      ['Age + Weight + Rate', '≥10 yr · ≥40 kg · >100 mL/hr', 'Macrodrip acceptable'],
+      ['Need for high-flow', 'Resuscitation, blood loss', 'Macrodrip / large-bore'],
+    ].forEach(r => { const tr = el('tr'); r.forEach(c => { const td = el('td'); td.textContent = c; tr.appendChild(td); }); tbody.appendChild(tr); });
+    tbl.appendChild(tbody); stage.appendChild(tbl);
+
+    note('<strong>Local policy first.</strong> Your facility\'s pediatric clinical educator, pharmacy, or nursing P&P committee almost certainly has a written local policy — align to that for medico-legal cover. The published standards are the floor, not the ceiling.', 'warn');
+
+    sectionHead('Related');
+    note('See <strong>Fluids & blood</strong> for maintenance rates, bolus volumes, and transfusion calculations.', 'info');
+  }
+  registerStep('eq-ivsetup', 'IV setup', renderIVSetup, ['Home', 'Equipment']);
+
   // ============ REFERENCE PAGES ============
 
   function renderVitals() {
@@ -2478,9 +2818,22 @@
 
   function renderLabs() {
     titleWithFav('Normal labs by age', 'Reference ranges for pediatric labs (vary by lab — confirm with local).', 'ref-labs');
+    note('<strong>Age categories:</strong> Newborn = 0–28 days · Infant = 1–24 months · Child = 2–12 yr · Adolescent = 13+ yr (use adult ranges)', 'info');
+    const m = ageMonths();
+    let activeCol = -1; // 0=Newborn col, 1=Infant, 2=Child
+    if (m != null) {
+      if (m < 1) activeCol = 0;
+      else if (m < 24) activeCol = 1;
+      else if (m < 156) activeCol = 2;
+    }
     const tbl = el('table', 'ref');
     const thead = el('thead'); const hr = el('tr');
-    ['Lab', 'Newborn', 'Infant', 'Child', 'Units'].forEach(h => { const th = el('th'); th.textContent = h; hr.appendChild(th); });
+    ['Lab', 'Newborn', 'Infant', 'Child', 'Units'].forEach((h, i) => {
+      const th = el('th');
+      th.textContent = h;
+      if (activeCol >= 0 && i === activeCol + 1) th.style.background = 'var(--info-bg)';
+      hr.appendChild(th);
+    });
     thead.appendChild(hr); tbl.appendChild(thead);
     const tbody = el('tbody');
     [
@@ -2502,7 +2855,12 @@
       ['PTT', '25–35', '25–35', '25–35', 'sec'],
     ].forEach(r => {
       const tr = el('tr');
-      r.forEach(c => { const td = el('td'); td.textContent = c; tr.appendChild(td); });
+      r.forEach((c, i) => {
+        const td = el('td');
+        td.textContent = c;
+        if (activeCol >= 0 && i === activeCol + 1) { td.style.background = 'var(--info-bg)'; td.style.fontWeight = '500'; }
+        tr.appendChild(td);
+      });
       tbody.appendChild(tr);
     });
     tbl.appendChild(tbody); stage.appendChild(tbl);
